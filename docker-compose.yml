@@ -1,0 +1,94 @@
+
+services:
+  user-db:
+    image: mysql:8.0
+    container_name: kansakriti-user-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${USER_DB_ROOT_PASSWORD:-localRootUser123!}
+      MYSQL_DATABASE: user_db
+      MYSQL_USER: user_app
+      MYSQL_PASSWORD: ${USER_DB_PASSWORD:-localUser123!}
+    ports:
+      - "3309:3306"
+    volumes:
+      - user_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  user-service:
+    build:
+      context: ./backend/user-service
+    ports:
+      - "8081:8080"
+    depends_on:
+      user-db:
+        condition: service_healthy
+
+  
+  catalog-service:
+    build:
+      context: ./backend/catalog-service
+    ports:
+      - "8082:8080"
+    depends_on:
+      catalog-db:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./backend/order-service
+    ports:
+      - "8083:8080"
+    depends_on:
+      order-db:
+        condition: service_healthy
+
+  catalog-db:
+    image: mysql:8.0
+    container_name: kansakriti-catalog-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${CATALOG_DB_ROOT_PASSWORD:-localRootCatalog123!}
+      MYSQL_DATABASE: catalog_db
+      MYSQL_USER: catalog_app
+      MYSQL_PASSWORD: ${CATALOG_DB_PASSWORD:-localCatalog123!}
+    ports:
+      - "3307:3306"
+    volumes:
+      - catalog_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  order-db:
+    image: mysql:8.0
+    container_name: kansakriti-order-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ORDER_DB_ROOT_PASSWORD:-localRootOrder123!}
+      MYSQL_DATABASE: order_db
+      MYSQL_USER: order_app
+      MYSQL_PASSWORD: ${ORDER_DB_PASSWORD:-localOrder123!}
+    ports:
+      - "3308:3306"
+    volumes:
+      - order_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  user_db_data:
+  catalog_db_data:
+  order_db_data:
