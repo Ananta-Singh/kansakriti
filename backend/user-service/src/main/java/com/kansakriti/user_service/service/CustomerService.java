@@ -1,6 +1,8 @@
 package com.kansakriti.user_service.service;
 
 import com.kansakriti.user_service.dto.CustomerRegisterRequest;
+import com.kansakriti.user_service.dto.CustomerResponse;
+import com.kansakriti.user_service.exception.EmailAlreadyExistsException;
 import com.kansakriti.user_service.model.Customer;
 import com.kansakriti.user_service.repositories.CustomerRepository;
 
@@ -18,9 +20,9 @@ public class CustomerService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Customer register(CustomerRegisterRequest request) {
+    public CustomerResponse register(CustomerRegisterRequest request) {
         if (customerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new EmailAlreadyExistsException("Email already registered");
         }
 
         Customer customer = new Customer();
@@ -29,6 +31,13 @@ public class CustomerService {
         customer.setPassword(passwordEncoder.encode(request.getPassword()));
         customer.setPhone(request.getPhone());
 
-        return customerRepository.save(customer);
+        Customer saved = customerRepository.save(customer);
+
+        return new CustomerResponse(
+                saved.getId(),
+                saved.getName(),
+                saved.getEmail(),
+                saved.getPhone(),
+                saved.getRole());
     }
 }

@@ -1,7 +1,8 @@
 package com.kansakriti.user_service.service;
 
-
 import com.kansakriti.user_service.dto.SellerRegisterRequest;
+import com.kansakriti.user_service.dto.SellerResponse;
+import com.kansakriti.user_service.exception.EmailAlreadyExistsException;
 import com.kansakriti.user_service.model.Seller;
 import com.kansakriti.user_service.model.SellerStatus;
 import com.kansakriti.user_service.repositories.SellerRepository;
@@ -20,9 +21,9 @@ public class SellerService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Seller register(SellerRegisterRequest request) {
+    public SellerResponse register(SellerRegisterRequest request) {
         if (sellerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new EmailAlreadyExistsException("Email already registered");
         }
 
         Seller seller = new Seller();
@@ -32,6 +33,14 @@ public class SellerService {
         seller.setPassword(passwordEncoder.encode(request.getPassword()));
         seller.setStatus(SellerStatus.PENDING); // every new seller starts pending admin approval
 
-        return sellerRepository.save(seller);
+        Seller saved = sellerRepository.save(seller);
+
+        return new SellerResponse(
+                saved.getId(),
+                saved.getShopName(),
+                saved.getName(),
+                saved.getEmail(),
+                saved.getRole(),
+                saved.getStatus());
     }
 }
