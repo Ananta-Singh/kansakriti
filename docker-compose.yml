@@ -28,7 +28,8 @@ services:
     depends_on:
       user-db:
         condition: service_healthy
-
+    environment:
+        JWT_SECRET: ${JWT_SECRET}
   
   catalog-service:
     build:
